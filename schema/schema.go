@@ -24,8 +24,7 @@ func SyncTables(connStr string) {
 	tables, err := getTalbes()
 	if err == nil {
 		glog.Info("Read tables from file...")
-	}
-	if err != nil {
+	} else {
 		glog.Info("No serialized tables found, requesting from db...")
 
 		tables, err = readTablesFromDB(connStr)
@@ -73,20 +72,20 @@ func readTablesFromDB(connStr string) ([]*Table, error) {
 }
 
 func combineColumnsToTables(cols []*Column) []*Table {
-	tMap := map[string]*Table{}
+	tmap := map[string]*Table{}
 	for _, col := range cols {
 		tn := col.TableName
-		_, inmap := tMap[tn]
+		_, inmap := tmap[tn]
 
 		if !inmap {
-			tMap[tn] = &Table{tn, []*Column{col}}
+			tmap[tn] = &Table{tn, []*Column{col}}
 		} else {
-			tMap[tn].Cols = append(tMap[tn].Cols, col)
+			tmap[tn].Cols = append(tmap[tn].Cols, col)
 		}
 	}
 
 	tables := []*Table{}
-	for _, t := range tMap {
+	for _, t := range tmap {
 		tables = append(tables, t)
 	}
 
