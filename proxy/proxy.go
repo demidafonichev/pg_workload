@@ -12,7 +12,7 @@ import (
 	"io"
 	"net"
 
-	"pg_workload/parser"
+	"pgworkload/parser"
 
 	"github.com/golang/glog"
 )
@@ -24,12 +24,7 @@ var (
 // Start proxy server needed receive  and proxyHost, all
 // the request or database's sql of receive will redirect
 // to remoteHost.
-func Start(proxyHost, remoteHost string, filterCallback, returnCallBack parser.Callback) {
-	defer glog.Flush()
-	glog.Infof("Proxying from %v to %v\n", proxyHost, remoteHost)
-
-	proxyAddr := getResolvedAddresses(proxyHost)
-	remoteAddr := getResolvedAddresses(remoteHost)
+func Start(proxyAddr, remoteAddr *net.TCPAddr, filterCallback, returnCallBack parser.Callback) {
 	listener := getListener(proxyAddr)
 
 	for {
@@ -53,8 +48,8 @@ func Start(proxyHost, remoteHost string, filterCallback, returnCallBack parser.C
 	}
 }
 
-// ResolvedAddresses of host.
-func getResolvedAddresses(host string) *net.TCPAddr {
+// GetResolvedAddresses returns resolved address of host.
+func GetResolvedAddresses(host string) *net.TCPAddr {
 	addr, err := net.ResolveTCPAddr("tcp", host)
 	if err != nil {
 		glog.Fatalln("ResolveTCPAddr of host:", err)
@@ -141,6 +136,7 @@ func (p *Proxy) handleIncomingConnection(src, dst *net.TCPConn, Callback parser.
 			return
 		}
 		b, err := getModifiedBuffer(buff[:n], Callback)
+		fmt.Printf("Write to db: %s\n", string(b))
 		if err != nil {
 			p.err("%s\n", err)
 			err = dst.Close()
@@ -169,7 +165,7 @@ func (p *Proxy) handleResponseConnection(src, dst *net.TCPConn, Callback parser.
 			return
 		}
 		b := setResponseBuffer(p.erred, buff[:n], Callback)
-
+		// fmt.Printf("Reading from db: %s\n", string(b))
 		n, err = dst.Write(b)
 		if err != nil {
 			p.err("Write failed '%s'\n", err)

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	db, err := sqlx.Open("postgres", "host=127.0.0.1 port=9090 user=demidafonichev password=postgres dbname=master_thesis sslmode=disable")
+	db, err := sqlx.Open("postgres", "host=127.0.0.1 port=5432 user=demidafonichev password='' dbname=master_thesis application_name=pgproxy sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -24,7 +24,7 @@ func main() {
 		}
 	}()
 
-	rows, err := db.Query("select name from customer_account")
+	rows, err := db.Query("select column_name from information_schema.columns where table_schema = 'public'")
 	if err != nil {
 		fmt.Println(err)
 	} else {

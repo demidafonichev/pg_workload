@@ -1,4 +1,4 @@
-module pg_workload
+module pgworkload
 
 go 1.15
 

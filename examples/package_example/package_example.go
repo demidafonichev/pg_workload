@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"pg_workload/cli"
+	"pgworkload/cli"
 )
 
 func main() {

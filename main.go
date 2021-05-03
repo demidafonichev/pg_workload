@@ -6,7 +6,7 @@
 package main
 
 import (
-	"pg_workload/cli"
+	"pgworkload/cli"
 )
 
 func main() {

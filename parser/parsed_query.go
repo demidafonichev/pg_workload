@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 
-	"pg_workload/parser/dependency/sqltypes"
+	"pgworkload/parser/dependency/sqltypes"
 )
 
 type bindLocation struct {

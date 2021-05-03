@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"pg_workload/parser/dependency/sqltypes"
+	"pgworkload/parser/dependency/sqltypes"
 )
 
 const EOFCHAR = 0x100

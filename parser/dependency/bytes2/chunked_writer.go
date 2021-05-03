@@ -11,7 +11,7 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"pg_workload/parser/dependency/hack"
+	"pgworkload/parser/dependency/hack"
 )
 
 // ChunkedWriter has the same interface as bytes.Buffer's write functions.

@@ -37,7 +37,6 @@ func GetQueryModificada(queryOriginal string) string {
 
 func Filter(str []byte) bool {
 	sql := Extracte(str)
-	fmt.Println(sql)
 	tree, err := Parse(sql)
 	if err != nil {
 		glog.Errorln(err)

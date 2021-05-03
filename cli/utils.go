@@ -17,11 +17,11 @@ import (
 )
 
 const Logo = `
-    ____  ____ _____  _________  _  ____  __
-   / __ \/ __ '/ __ \/ ___/ __ \| |/_/ / / /
-  / /_/ / /_/ / /_/ / /  / /_/ />  </ /_/ / 
- / .___/\__, / .___/_/   \____/_/|_|\__, /  
-/_/    /____/_/                    /____/   
+                               _    _                _ 
+ _ __  __ _ __ __ __ ___  _ _ | |__| | ___  __ _  __| |
+| '_ \/ _' |\ V  V // _ \| '_|| / /| |/ _ \/ _' |/ _' |
+| .__/\__, | \_/\_/ \___/|_|  |_\_\|_|\___/\__,_|\__,_|
+|_|   |___/
 `
 
 const (
@@ -54,5 +54,12 @@ func readConfig(file string) (pc ProxyConfig, connStr string) {
 	sepindex := strings.Index(pc.DB["master"].Addr, ":")
 
 	return pc, fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s application_name=pgproxy sslmode=disable",
-		pc.DB["master"].Addr[0:sepindex], pc.DB["master"].Addr[(sepindex+1):], pc.DB["master"].User, pc.DB["master"].Password, pc.DB["master"].DbName)
+		pc.DB["master"].Addr[0:sepindex], pc.DB["master"].Addr[(sepindex+1):], pc.DB["master"].User, getPassword(pc.DB["master"].Password), pc.DB["master"].DbName)
+}
+
+func getPassword(pass string) string {
+	if pass == "" {
+		return "''"
+	}
+	return pass
 }

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"pg_workload/proxy"
+	"pgworkload/proxy"
 
 	"github.com/golang/glog"
 	"github.com/jmoiron/sqlx"

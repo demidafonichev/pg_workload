@@ -7,7 +7,7 @@ package parser
 import (
 	"testing"
 
-	"pg_workload/parser/dependency/sqltypes"
+	"pgworkload/parser/dependency/sqltypes"
 )
 
 func TestParsedQuery(t *testing.T) {

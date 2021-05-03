@@ -11,7 +11,7 @@ import (
 	"math"
 	"time"
 
-	"pg_workload/parser/dependency/hack"
+	"pgworkload/parser/dependency/hack"
 )
 
 // VerifyObject verifies kind to make sure it's
