@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	db, err := sqlx.Open("postgres", "host=127.0.0.1 port=9090 user=demidafonichev password=postgres dbname=master_thesis sslmode=disable")
+	db, err := sqlx.Open("postgres", "host=127.0.0.1 port=9090 user=demidafonichev password='' dbname=master_thesis application_name=pgproxy sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -24,17 +24,32 @@ func main() {
 		}
 	}()
 
-	rows, err := db.Query("select name from customer_account")
+	// rows, err := db.Query("select email from userprofile")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// } else {
+	// 	for rows.Next() {
+	// 		var a string
+
+	// 		if err := rows.Scan(&a); err != nil {
+	// 			fmt.Println(err)
+	// 		} else {
+	// 			fmt.Println(a)
+	// 		}
+	// 	}
+	// }
+
+	rows, err := db.Query("select first_name, last_name, email from userprofile")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		for rows.Next() {
-			var name string
+			var fn, ln, e string
 
-			if err := rows.Scan(&name); err != nil {
+			if err := rows.Scan(&fn, &ln, &e); err != nil {
 				fmt.Println(err)
 			} else {
-				fmt.Println(name)
+				fmt.Println(fn, ln, e)
 			}
 		}
 	}

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"pg_workload/parser/dependency/bytes2"
+	"pgworkload/parser/dependency/bytes2"
 )
 
 type alltypes struct {

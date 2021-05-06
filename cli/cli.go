@@ -10,12 +10,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"pgworkload/parser"
+	"pgworkload/proxy"
+	"pgworkload/workload"
 	"strconv"
 	"syscall"
 	"time"
-
-	"pg_workload/parser"
-	"pg_workload/proxy"
 
 	"github.com/golang/glog"
 )
@@ -46,11 +46,18 @@ func Main(config interface{}, pargs interface{}) {
 		return
 	} else {
 		if args[1] == "start" {
+
+			proxyAddr := proxy.GetResolvedAddresses(pc.ServerConfig.ProxyAddr)
+			remoteAddr := proxy.GetResolvedAddresses(pc.DB["master"].Addr)
+
+			glog.Infoln("Starting pgworkload...")
+			qSet := workload.Start(connStr)
+
 			glog.Infoln("Starting pgproxy...")
 			info(pc.ServerConfig.ProxyAddr)
 			logDir()
 			saveCurrentPid()
-			proxy.Start(pc.ServerConfig.ProxyAddr, pc.DB["master"].Addr, parser.Filter, parser.Return)
+			proxy.Start(proxyAddr, remoteAddr, parser.Filter, parser.Return, qSet)
 			glog.Infoln("Started pgproxy successfully.")
 		} else if args[1] == "cli" {
 			Command()

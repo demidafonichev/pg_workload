@@ -6,7 +6,6 @@
 package parser
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/golang/glog"
@@ -14,7 +13,7 @@ import (
 
 // Callback function from proxy to postgresql for rewrite
 // request or sql.
-type Callback func(get []byte) bool
+type Callback func(get []byte) (string, bool)
 
 // Extracte sql statement from string
 func Extracte(str []byte) string {
@@ -35,31 +34,29 @@ func GetQueryModificada(queryOriginal string) string {
 	return "select * from clientes limit 1;"
 }
 
-func Filter(str []byte) bool {
+func Filter(str []byte) (string, bool) {
 	sql := Extracte(str)
-	fmt.Println(sql)
 	tree, err := Parse(sql)
 	if err != nil {
 		glog.Errorln(err)
-		return false
+		return sql, false
 	}
 
 	switch tree.(type) {
 	case *Select:
-		return ParseSelect(tree.(*Select))
+		return sql, ParseSelect(tree.(*Select))
 	case *Delete:
-		return ParseDelete(tree.(*Delete))
+		return sql, ParseDelete(tree.(*Delete))
 	case *Insert:
-		return ParseInsert(tree.(*Insert))
+		return sql, ParseInsert(tree.(*Insert))
 	case *Update:
-		return ParseUpdate(tree.(*Update))
+		return sql, ParseUpdate(tree.(*Update))
 	}
-	return false
+	return sql, false
 }
 
-func Return(str []byte) bool {
-	fmt.Println(string(str))
-	return true
+func Return(str []byte) (string, bool) {
+	return string(str), true
 }
 
 func ParseSelect(sql *Select) bool {

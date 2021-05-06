@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"pg_workload/parser/dependency/sqltypes"
+	"pgworkload/parser/dependency/sqltypes"
 )
 
 // Instructions for creating new types: If a type
