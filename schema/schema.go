@@ -52,7 +52,7 @@ func readTablesFromDB(connStr string) ([]*Table, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Queryx("select table_name, column_name, data_type from information_schema.columns where table_schema='public'")
+	rows, err := db.Queryx("select table_name, column_name, data_type from information_schema.columns where table_schema='public' and table_name <> 'pg_stat_statements'")
 	if err != nil {
 		glog.Fatalln(err)
 	}

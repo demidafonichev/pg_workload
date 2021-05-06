@@ -7,12 +7,14 @@
 package proxy
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 
 	"pgworkload/parser"
+	"pgworkload/query"
 
 	"github.com/golang/glog"
 )
@@ -24,7 +26,7 @@ var (
 // Start proxy server needed receive  and proxyHost, all
 // the request or database's sql of receive will redirect
 // to remoteHost.
-func Start(proxyAddr, remoteAddr *net.TCPAddr, filterCallback, returnCallBack parser.Callback) {
+func Start(proxyAddr, remoteAddr *net.TCPAddr, filterCallback, returnCallBack parser.Callback, qSet *query.QuerySet) {
 	listener := getListener(proxyAddr)
 
 	for {
@@ -44,7 +46,7 @@ func Start(proxyAddr, remoteAddr *net.TCPAddr, filterCallback, returnCallBack pa
 			prefix: fmt.Sprintf("Connection #%03d ", connid),
 			connId: connid,
 		}
-		go p.service(filterCallback, returnCallBack)
+		go p.service(filterCallback, returnCallBack, qSet)
 	}
 }
 
@@ -105,7 +107,7 @@ func (p *Proxy) err(s string, err error) {
 }
 
 // Proxy.service open connection to remote and service proxying data.
-func (p *Proxy) service(filterCallback, returnCallBack parser.Callback) {
+func (p *Proxy) service(filterCallback, returnCallBack parser.Callback, qSet *query.QuerySet) {
 	defer p.lconn.Close()
 	// connect to remote server
 	rconn, err := net.DialTCP("tcp", nil, p.raddr)
@@ -117,7 +119,7 @@ func (p *Proxy) service(filterCallback, returnCallBack parser.Callback) {
 	defer p.rconn.Close()
 
 	// proxying data
-	go p.handleIncomingConnection(p.lconn, p.rconn, filterCallback)
+	go p.handleIncomingConnection(p.lconn, p.rconn, filterCallback, qSet)
 	go p.handleResponseConnection(p.rconn, p.lconn, returnCallBack)
 
 	// wait for close...
@@ -125,7 +127,7 @@ func (p *Proxy) service(filterCallback, returnCallBack parser.Callback) {
 }
 
 // Proxy.handleIncomingConnection
-func (p *Proxy) handleIncomingConnection(src, dst *net.TCPConn, Callback parser.Callback) {
+func (p *Proxy) handleIncomingConnection(src, dst *net.TCPConn, Callback parser.Callback, qSet *query.QuerySet) {
 	// directional copy (64k buffer)
 	buff := make([]byte, 0xffff)
 
@@ -135,8 +137,12 @@ func (p *Proxy) handleIncomingConnection(src, dst *net.TCPConn, Callback parser.
 			p.err("Read failed '%s'\n", err)
 			return
 		}
-		b, err := getModifiedBuffer(buff[:n], Callback)
-		fmt.Printf("Write to db: %s\n", string(b))
+		b, bm, err := getModifiedBuffer(buff[:n], Callback)
+
+		// Removing \x00 bytes from string message
+		message := string(bytes.Trim([]byte(bm), "\x00"))
+		qSet.Append(message)
+
 		if err != nil {
 			p.err("%s\n", err)
 			err = dst.Close()
@@ -175,20 +181,24 @@ func (p *Proxy) handleResponseConnection(src, dst *net.TCPConn, Callback parser.
 }
 
 // ModifiedBuffer when is local and will call filterCallback function
-func getModifiedBuffer(buffer []byte, filterCallback parser.Callback) (b []byte, err error) {
+func getModifiedBuffer(buffer []byte, filterCallback parser.Callback) (b []byte, message string, err error) {
 	if len(buffer) > 0 && string(buffer[0]) == "Q" {
-		if !filterCallback(buffer) {
-			return nil, errors.New(fmt.Sprintf("Do not meet the rules of the sql statement %s", string(buffer[1:])))
+		message, correct := filterCallback(buffer)
+		if !correct {
+			return nil, "", errors.New(fmt.Sprintf("Do not meet the rules of the sql statement %s", string(buffer[1:])))
+		} else {
+			return buffer, message, nil
 		}
 	}
 
-	return buffer, nil
+	return buffer, "", nil
 }
 
 // ResponseBuffer when is local and will call returnCallback function
 func setResponseBuffer(iserr bool, buffer []byte, filterCallback parser.Callback) (b []byte) {
 	if len(buffer) > 0 && string(buffer[0]) == "Q" {
-		if !filterCallback(buffer) {
+		_, correct := filterCallback(buffer)
+		if !correct {
 			return nil
 		}
 	}

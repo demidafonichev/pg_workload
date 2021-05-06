@@ -51,13 +51,13 @@ func Main(config interface{}, pargs interface{}) {
 			remoteAddr := proxy.GetResolvedAddresses(pc.DB["master"].Addr)
 
 			glog.Infoln("Starting pgworkload...")
-			workload.Start(connStr)
+			qSet := workload.Start(connStr)
 
 			glog.Infoln("Starting pgproxy...")
 			info(pc.ServerConfig.ProxyAddr)
 			logDir()
 			saveCurrentPid()
-			proxy.Start(proxyAddr, remoteAddr, parser.Filter, parser.Return)
+			proxy.Start(proxyAddr, remoteAddr, parser.Filter, parser.Return, qSet)
 			glog.Infoln("Started pgproxy successfully.")
 		} else if args[1] == "cli" {
 			Command()
