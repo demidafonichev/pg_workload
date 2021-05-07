@@ -35,12 +35,20 @@ func workload(connStr string, qs *query.QuerySet) {
 	for {
 		time.Sleep(3 * time.Second)
 
-		queries := loadQueriesStats(connStr)
-		filteredQueries := filterQueries(queries, qs)
+		statQueries := loadQueriesStats(connStr)
+		regexpStatQueries := makeRegexpFromStatsQueries(statQueries)
+
+		filteredQueries, filteredStatQueries := filterQueriesByRegexp(regexpStatQueries, qs)
 
 		fmt.Printf("Filtered queries:\n")
 		for _, q := range filteredQueries {
-			fmt.Printf("%s\n", q.Query)
+			fmt.Printf("%s\n", q[:15])
+		}
+		fmt.Println("-------------------------")
+
+		fmt.Printf("Filtered stat queries:\n")
+		for _, q := range filteredStatQueries {
+			fmt.Printf("%s\n", q.Query[:15])
 		}
 		fmt.Println("-------------------------")
 	}
@@ -67,16 +75,4 @@ func loadQueriesStats(connStr string) []*Query {
 		queries = append(queries, q)
 	}
 	return queries
-}
-
-func filterQueries(queries []*Query, qs *query.QuerySet) []*Query {
-	filteredQueries := []*Query{}
-
-	for _, q := range queries {
-		if qs.Contains(q.Query) {
-			filteredQueries = append(filteredQueries, q)
-		}
-	}
-
-	return filteredQueries
 }

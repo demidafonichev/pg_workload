@@ -95,7 +95,7 @@ func Is_BIG_DELETE(sql *Delete) bool {
 }
 
 func ParseInsert(sql *Insert) bool {
-	return !Is_BIG_INSERT(sql)
+	return true
 }
 
 func Is_BIG_INSERT(sql *Insert) bool {
