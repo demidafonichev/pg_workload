@@ -21,8 +21,7 @@ import (
 )
 
 var (
-	connStr string
-	pc      ProxyConfig
+	pc ProxyConfig
 )
 
 // pgproxy Main
@@ -33,10 +32,10 @@ func Main(config interface{}, pargs interface{}) {
 
 	var args []string
 	if nil != config {
-		pc, connStr = readConfig(config.(string))
+		pc = readConfig(config.(string))
 		args = pargs.([]string)
 	} else {
-		pc, connStr = readConfig(*proxyconf)
+		pc = readConfig(*proxyconf)
 		args = os.Args
 	}
 
@@ -47,20 +46,18 @@ func Main(config interface{}, pargs interface{}) {
 	} else {
 		if args[1] == "start" {
 
-			proxyAddr := proxy.GetResolvedAddresses(pc.ServerConfig.ProxyAddr)
-			remoteAddr := proxy.GetResolvedAddresses(pc.DB["master"].Addr)
+			proxyAddr := proxy.GetResolvedAddresses(pc.ServerConfig.Host, pc.ServerConfig.Port)
+			remoteAddr := proxy.GetResolvedAddresses(pc.DBConfig.Host, pc.DBConfig.Port)
 
 			glog.Infoln("Starting pgworkload...")
-			qSet := workload.Start(connStr)
+			qSet := workload.Start(pc.DBConfig)
 
 			glog.Infoln("Starting pgproxy...")
-			info(pc.ServerConfig.ProxyAddr)
+			info(pc.ServerConfig.Host, pc.ServerConfig.Port)
 			logDir()
 			saveCurrentPid()
 			proxy.Start(proxyAddr, remoteAddr, parser.Filter, parser.Return, qSet)
 			glog.Infoln("Started pgproxy successfully.")
-		} else if args[1] == "cli" {
-			Command()
 		} else if args[1] == "stop" {
 			stop()
 		} else {
@@ -79,7 +76,7 @@ func help() {
 }
 
 // print pgproxy infomation
-func info(proxyhost string) {
+func info(host, port string) {
 	fmt.Println(Logo)
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -87,11 +84,12 @@ func info(proxyhost string) {
 	}
 	pid := strconv.Itoa(os.Getpid())
 	starttime := time.Now().Format("2006-01-02 03:04:05 PM")
-	fmt.Println("		", VERSION)
-	fmt.Println("	Host: " + hostname)
-	fmt.Println("	Pid:", string(pid))
-	fmt.Println("	Proxy:", proxyhost)
-	fmt.Println("	Starttime:", starttime)
+	proxyhost := fmt.Sprintf("%s:%s", host, port)
+	fmt.Println("			", VERSION)
+	fmt.Println("		Host: " + hostname)
+	fmt.Println("		Pid:", string(pid))
+	fmt.Println("		Proxy:", proxyhost)
+	fmt.Println("		Starttime:", starttime)
 	fmt.Println()
 }
 

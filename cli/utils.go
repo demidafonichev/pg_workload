@@ -7,9 +7,8 @@
 package cli
 
 import (
-	"fmt"
 	"os"
-	"strings"
+	"pgworkload/workload"
 	"syscall"
 
 	"github.com/BurntSushi/toml"
@@ -31,17 +30,13 @@ const (
 // proxy server config struct
 type ProxyConfig struct {
 	ServerConfig struct {
-		ProxyAddr string
+		Host string
+		Port string
 	}
-	DB map[string]struct {
-		Addr     string
-		User     string
-		Password string
-		DbName   string
-	} `toml:"DB"`
+	DBConfig workload.DatabaseConfig `toml:"DB"`
 }
 
-func readConfig(file string) (pc ProxyConfig, connStr string) {
+func readConfig(file string) (pc ProxyConfig) {
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		glog.Errorln(err)
 		os.Exit(int(syscall.ENOENT))
@@ -51,15 +46,5 @@ func readConfig(file string) (pc ProxyConfig, connStr string) {
 		glog.Fatalln(err)
 	}
 
-	sepindex := strings.Index(pc.DB["master"].Addr, ":")
-
-	return pc, fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s application_name=pgproxy sslmode=disable",
-		pc.DB["master"].Addr[0:sepindex], pc.DB["master"].Addr[(sepindex+1):], pc.DB["master"].User, getPassword(pc.DB["master"].Password), pc.DB["master"].DbName)
-}
-
-func getPassword(pass string) string {
-	if pass == "" {
-		return "''"
-	}
-	return pass
+	return
 }

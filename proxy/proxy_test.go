@@ -83,7 +83,7 @@ func Test_Start(t *testing.T) {
 }
 
 func Test_getResolvedAddresses(t *testing.T) {
-	GetResolvedAddresses("127.0.0.1:9090")
+	GetResolvedAddresses("127.0.0.1", "9090")
 }
 
 func Test_getListener(t *testing.T) {

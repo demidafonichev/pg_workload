@@ -14,7 +14,7 @@ import (
 	"net"
 
 	"pgworkload/parser"
-	"pgworkload/query"
+	"pgworkload/workload"
 
 	"github.com/golang/glog"
 )
@@ -26,7 +26,7 @@ var (
 // Start proxy server needed receive  and proxyHost, all
 // the request or database's sql of receive will redirect
 // to remoteHost.
-func Start(proxyAddr, remoteAddr *net.TCPAddr, filterCallback, returnCallBack parser.Callback, qSet *query.QuerySet) {
+func Start(proxyAddr, remoteAddr *net.TCPAddr, filterCallback, returnCallBack parser.Callback, qSet *workload.QuerySet) {
 	listener := getListener(proxyAddr)
 
 	for {
@@ -51,7 +51,8 @@ func Start(proxyAddr, remoteAddr *net.TCPAddr, filterCallback, returnCallBack pa
 }
 
 // GetResolvedAddresses returns resolved address of host.
-func GetResolvedAddresses(host string) *net.TCPAddr {
+func GetResolvedAddresses(dbhost, dbport string) *net.TCPAddr {
+	host := fmt.Sprintf("%s:%s", dbhost, dbport)
 	addr, err := net.ResolveTCPAddr("tcp", host)
 	if err != nil {
 		glog.Fatalln("ResolveTCPAddr of host:", err)
@@ -107,7 +108,7 @@ func (p *Proxy) err(s string, err error) {
 }
 
 // Proxy.service open connection to remote and service proxying data.
-func (p *Proxy) service(filterCallback, returnCallBack parser.Callback, qSet *query.QuerySet) {
+func (p *Proxy) service(filterCallback, returnCallBack parser.Callback, qSet *workload.QuerySet) {
 	defer p.lconn.Close()
 	// connect to remote server
 	rconn, err := net.DialTCP("tcp", nil, p.raddr)
@@ -127,7 +128,7 @@ func (p *Proxy) service(filterCallback, returnCallBack parser.Callback, qSet *qu
 }
 
 // Proxy.handleIncomingConnection
-func (p *Proxy) handleIncomingConnection(src, dst *net.TCPConn, Callback parser.Callback, qSet *query.QuerySet) {
+func (p *Proxy) handleIncomingConnection(src, dst *net.TCPConn, Callback parser.Callback, qSet *workload.QuerySet) {
 	// directional copy (64k buffer)
 	buff := make([]byte, 0xffff)
 

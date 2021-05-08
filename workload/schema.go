@@ -1,8 +1,6 @@
-package schema
+package workload
 
 import (
-	"fmt"
-
 	"github.com/golang/glog"
 	"github.com/jmoiron/sqlx"
 )
@@ -20,15 +18,16 @@ type Column struct {
 
 var Tables []*Table
 
-func SyncTables(connStr string) {
+// syncTables loads db tables config from file
+// if config is not found - requests config from db and saves to file
+func syncTables(dbconf DatabaseConfig) {
 	tables, err := getTalbes()
 	if err == nil {
 		glog.Info("Read tables from file...")
 	} else {
 		glog.Info("No serialized tables found, requesting from db...")
 
-		tables, err = readTablesFromDB(connStr)
-		fmt.Println(tables)
+		tables, err = readTablesFromDB(dbconf)
 		if err != nil {
 			glog.Infof("Error reading tables form db: %s\n", err)
 		}
@@ -44,9 +43,9 @@ func SyncTables(connStr string) {
 	Tables = tables
 }
 
-func readTablesFromDB(connStr string) ([]*Table, error) {
-	fmt.Println(connStr)
-	db, err := sqlx.Open("postgres", connStr)
+// readTablesFromDB requests db tables configuration
+func readTablesFromDB(dbconf DatabaseConfig) ([]*Table, error) {
+	db, err := sqlx.Open("postgres", dbconf.ConnStr)
 	if err != nil {
 		glog.Fatalln(err)
 	}
@@ -67,10 +66,10 @@ func readTablesFromDB(connStr string) ([]*Table, error) {
 	}
 
 	tables := combineColumnsToTables(cols)
-
 	return tables, nil
 }
 
+// combineColumnsToTables combines Column structs to Table struct
 func combineColumnsToTables(cols []*Column) []*Table {
 	tmap := map[string]*Table{}
 	for _, col := range cols {
