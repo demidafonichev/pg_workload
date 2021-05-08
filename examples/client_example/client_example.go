@@ -24,20 +24,18 @@ func main() {
 		}
 	}()
 
-	// rows, err := db.Query("select email from userprofile")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// } else {
-	// 	for rows.Next() {
-	// 		var a string
+	rows, err := db.Query("select email from userprofile where first_name = 'Braydon'")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		for rows.Next() {
+			var a string
 
-	// 		if err := rows.Scan(&a); err != nil {
-	// 			fmt.Println(err)
-	// 		} else {
-	// 			fmt.Println(a)
-	// 		}
-	// 	}
-	// }
+			if err := rows.Scan(&a); err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
 
 	// rows, err := db.Query("select first_name, last_name, email from userprofile")
 	// if err != nil {
@@ -54,17 +52,15 @@ func main() {
 	// 	}
 	// }
 
-	rows, err := db.Queryx(`
-	insert into userprofile(first_name, last_name, email)
-	values
-		('Demid', 'Afonichev', 'demidafonichev@gmail.com'),
-		('Example', 'User', 'example@gmail.com'),
-		('qwe', 'asd', 'zxc')`)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		for rows.Next() {
-			fmt.Println("Inserted")
-		}
-	}
+	// rows, err := db.Queryx(`
+	// insert into userprofile(first_name, last_name, email)
+	// values
+	// 	('Demid', 'Afonichev', 'demidafonichev@gmail.com')`)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// } else {
+	// 	for rows.Next() {
+	// 		fmt.Println("Inserted")
+	// 	}
+	// }
 }

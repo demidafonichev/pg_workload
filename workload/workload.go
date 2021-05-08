@@ -26,36 +26,51 @@ func Start(connStr string) *query.QuerySet {
 	schema.SyncTables(connStr)
 	qs := query.ResetQuerySet()
 
-	go workload(connStr, qs)
+	ws := &WorkloadAnalyzer{
+		querySet: qs,
+		conn:     connStr,
+	}
+	go ws.service()
 
 	return qs
 }
 
-func workload(connStr string, qs *query.QuerySet) {
+type WorkloadAnalyzer struct {
+	querySet *query.QuerySet
+	conn     string
+}
+
+func (wa *WorkloadAnalyzer) service() {
 	for {
 		time.Sleep(3 * time.Second)
 
-		statQueries := loadQueriesStats(connStr)
-		regexpStatQueries := makeRegexpFromStatsQueries(statQueries)
-
-		filteredQueries, filteredStatQueries := filterQueriesByRegexp(regexpStatQueries, qs)
+		filteredQueries, filteredStatQueries := wa.getQueriesWithStats()
 
 		fmt.Printf("Filtered queries:\n")
 		for _, q := range filteredQueries {
-			fmt.Printf("%s\n", q[:15])
+			fmt.Printf("%s\n", q)
+		}
+		fmt.Println("-------------------------")
+		fmt.Printf("Filtered stat queries:\n")
+		for _, q := range filteredStatQueries {
+			fmt.Printf("%s\n", q.Query)
 		}
 		fmt.Println("-------------------------")
 
-		fmt.Printf("Filtered stat queries:\n")
-		for _, q := range filteredStatQueries {
-			fmt.Printf("%s\n", q.Query[:15])
-		}
-		fmt.Println("-------------------------")
+		wa.findOptimizations(filteredQueries, filteredStatQueries)
 	}
 }
 
-func loadQueriesStats(connStr string) []*Query {
-	db, err := sqlx.Open("postgres", connStr)
+func (wa *WorkloadAnalyzer) getQueriesWithStats() ([]string, []*Query) {
+	statQueries := wa.loadQueriesStats()
+	regexpStatQueries := makeRegexpFromStatsQueries(statQueries)
+
+	fQueries, fStatQueries := filterQueriesByRegexp(regexpStatQueries, wa.querySet)
+	return fQueries, fStatQueries
+}
+
+func (wa *WorkloadAnalyzer) loadQueriesStats() []*Query {
+	db, err := sqlx.Open("postgres", wa.conn)
 	if err != nil {
 		glog.Fatalln(err)
 	}
@@ -75,4 +90,8 @@ func loadQueriesStats(connStr string) []*Query {
 		queries = append(queries, q)
 	}
 	return queries
+}
+
+func (wa *WorkloadAnalyzer) findOptimizations([]string, []*Query) {
+	fmt.Println("Optimizing")
 }

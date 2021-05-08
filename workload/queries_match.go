@@ -1,6 +1,7 @@
 package workload
 
 import (
+	"fmt"
 	"pgworkload/query"
 	"regexp"
 	"strings"
@@ -20,24 +21,21 @@ func makeRegexpFromStatsQueries(queries []*Query) map[*Query]*regexp.Regexp {
 }
 
 func makeRegexpPattern(q string) string {
+	q = regexp.QuoteMeta(q)
+	q = strings.Replace(q, "\\$", "$", -1)
+
 	regexp := regexp.MustCompile("\\$\\d+")
 	rp := regexp.ReplaceAllString(q, "?")
-	replaces := map[string]string{
-		"?": ".+",
-		"(": "\\(",
-		")": "\\)",
-	}
-	for r, replace := range replaces {
-		rp = strings.Replace(rp, r, replace, -1)
-	}
-	return rp
+	rp = strings.Replace(rp, "?", ".+", -1)
+
+	return fmt.Sprintf("^%s$", rp)
 }
 
-func filterQueriesByRegexp(regexpStatQueries map[*Query]*regexp.Regexp, qs *query.QuerySet) ([]string, []*Query) {
+func filterQueriesByRegexp(rStatQueries map[*Query]*regexp.Regexp, qs *query.QuerySet) ([]string, []*Query) {
 	filteredQueries := []string{}
 	statQueries := map[*Query]bool{}
 
-	for sq, regexq := range regexpStatQueries {
+	for sq, regexq := range rStatQueries {
 		for q := range qs.Queries {
 			if regexq.MatchString(q) {
 				filteredQueries = append(filteredQueries, q)

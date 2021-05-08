@@ -1,5 +1,7 @@
 package query
 
+import "strings"
+
 type QuerySet struct {
 	Queries map[string]bool
 }
@@ -10,6 +12,8 @@ func (qs *QuerySet) Append(q string) {
 	if q == "" {
 		return
 	}
+
+	q = strings.TrimSpace(q)
 
 	_, inset := qs.Queries[q]
 	if !inset {
